@@ -157,10 +157,10 @@ def clear_dataset():
 
 if __name__ == '__main__':
     keywords = ['水杯', '衬衫', '西瓜', '手机', '铅笔']
-    number = 100
-    # for keyword in keywords:
-    #     creat_folder(keyword)
-    #     download_pictures(keyword,number)
+    number = 400
+    for keyword in keywords:
+        creat_folder(keyword)
+        download_pictures(keyword,number)
     clear_dataset()
 
 

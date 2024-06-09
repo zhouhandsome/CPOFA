@@ -1,12 +1,12 @@
 import os
 
-MODEL = "VGG"
+MODEL = "AlexNet"
 
 image_size = [224,224]
 
 dataset = "self_create"
 
-modle_save_path = r"D:\VsCodeProjects\pythonProjects\Smart_Algorithm\model_params"
+modle_save_path = r"D:\VsCodeProjects\pythonProjects\Smart_Algorithm\model_params\\"+MODEL
 
 EPOCH = 15
 
