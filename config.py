@@ -8,7 +8,7 @@ dataset = "self_create"
 
 modle_save_path = r"D:\VsCodeProjects\pythonProjects\Smart_Algorithm\model_params\\"+MODEL
 
-EPOCH = 15
+EPOCH = 8
 
 BATCH_SIZE = 4
 # 数据集文件夹路径
