@@ -1,6 +1,6 @@
 import os
 
-MODEL = "AlexNet"
+MODEL = "ResNet"
 
 image_size = [224,224]
 
@@ -8,9 +8,9 @@ dataset = "self_create"
 
 modle_save_path = r"D:\VsCodeProjects\pythonProjects\Smart_Algorithm\model_params\\"+MODEL
 
-EPOCH = 8
+EPOCH = 4
 
-BATCH_SIZE = 4
+BATCH_SIZE = 6
 # 数据集文件夹路径
 # 类别数目
 classes = ["shuibei","bi","smartphone","Tshirt","watermaller"]

@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 from model.vgg import VGGNet
 from model.vit import VisionTransformer
 from model.AlexNet import AlexNet
+from model.ResNet import ResNet
 from datasetloader import *
 from config import *
 import pickle
+
 
 # 数据加载器
 def get_data_loaders(train_path, train_label_path, test_path, test_label_path, train_transform, test_transform, batch_size):
@@ -33,7 +35,8 @@ def initialize_model(model_name, class_dim):
             epsilon=1e-6)
     elif model_name=="AlexNet":
         return  AlexNet(class_dim)
-
+    elif model_name == "ResNet":
+        return ResNet( num_classes=class_dim)
     else:
         raise ValueError("Unknown model name")
     
@@ -58,18 +61,12 @@ def train_and_evaluate(model, train_loader, test_loader, epochs, model_save_path
             optimizer.step()
             optimizer.clear_grad()
 
-            Iters.append(steps)
-            train_loss.append(loss.numpy())
-            total_acc.append(acc.numpy())
 
+            model.train()
             if steps % 10 == 0:
-                print(f'epo: {epo}, step: {steps}, loss is: {loss.numpy()}, acc is: {acc.numpy()}')
-
-            if steps % 100 == 0:
-                save_path = os.path.join(model_save_path, f"save_dir_{steps}.pdparams")
-                print(f'save model to: {save_path}')
-                paddle.save(model.state_dict(), save_path)
-
+                Iters.append(steps)
+                train_loss.append(loss.numpy())
+                total_acc.append(acc.numpy())
                 model.eval()
                 accs = []
                 for _, data in enumerate(test_loader()):
@@ -79,9 +76,15 @@ def train_and_evaluate(model, train_loader, test_loader, epochs, model_save_path
                     accs.append(acc.numpy())
                 test_iters.append(steps)
                 test_acc.append(np.mean(accs))
-                print('模型在验证集上的准确率为：', np.mean(accs))
-                model.train()
+                print(f'{MODEL}模型在验证集上的准确率为：', np.mean(accs))
+                print(f'epo: {epo}, step: {steps}, loss is: {loss.numpy()}, acc is: {acc.numpy()}')
 
+            if steps % 100 == 0:
+                save_path = os.path.join(model_save_path, f"save_dir_{steps}.pdparams")
+                print(f'save model to: {save_path}')
+                paddle.save(model.state_dict(), save_path)
+
+    
     model.eval()
     accs = []
     for _, data in enumerate(test_loader()):
