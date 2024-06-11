@@ -157,7 +157,7 @@ def clear_dataset():
 
 if __name__ == '__main__':
     keywords = ['水杯', '衬衫', '西瓜', '手机', '铅笔']
-    number = 400
+    number = 60
     for keyword in keywords:
         creat_folder(keyword)
         download_pictures(keyword,number)

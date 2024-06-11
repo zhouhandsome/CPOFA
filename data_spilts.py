@@ -14,7 +14,8 @@ class2English ={
     "铅笔":"pencle",
     "西瓜":"watermaller",
     "水杯":"cup",
-    "衬衫":"Tshirt"
+    "衬衫":"Tshirt",
+    "地图":'map'
 }
 names = ['train', 'test']
 random.seed(123)  # 随机数种子

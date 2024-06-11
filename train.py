@@ -4,18 +4,24 @@ import matplotlib.pyplot as plt
 from model.vgg import VGGNet
 from model.vit import VisionTransformer
 from model.AlexNet import AlexNet
-from model.ResNet import ResNet
+from model.ResNet import *
 from datasetloader import *
 from config import *
 import pickle
 
 
 # 数据加载器
-def get_data_loaders(train_path, train_label_path, test_path, test_label_path, train_transform, test_transform, batch_size):
-    train_dataset = MyDataset(train_path, train_label_path, train_transform)
-    test_dataset = MyDataset(test_path, test_label_path, test_transform)
-    train_loader = paddle.io.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_loader = paddle.io.DataLoader(test_dataset, batch_size=batch_size)
+def get_data_loaders(dataset_choice,train_path, train_label_path, test_path, test_label_path, train_transform, test_transform, batch_size):
+    if dataset_choice == "self_create":
+        train_dataset = MyDataset(train_path, train_label_path, train_transform)
+        test_dataset = MyDataset(test_path, test_label_path, test_transform)
+        train_loader = paddle.io.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        test_loader = paddle.io.DataLoader(test_dataset, batch_size=batch_size)
+    if dataset_choice == "Cifar10":
+        train_dataset = paddle.vision.datasets.Cifar10(transform=train_transform)
+        test_dataset = paddle.vision.datasets.Cifar10(mode="test",transform=test_transform)
+        train_loader = paddle.io.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        test_loader = paddle.io.DataLoader(test_dataset, batch_size=batch_size)
     return train_loader, test_loader
 
 # 初始化模型
@@ -36,7 +42,13 @@ def initialize_model(model_name, class_dim):
     elif model_name=="AlexNet":
         return  AlexNet(class_dim)
     elif model_name == "ResNet":
-        return ResNet( num_classes=class_dim)
+        return ResNet18( num_classes=class_dim)
+    elif model_name == "ResNet50":
+        return ResNet50( num_classes=class_dim)
+    elif model_name == "ResNet101":
+        return ResNet101( num_classes=class_dim)
+    elif model_name == "ResNet152":
+        return ResNet152( num_classes=class_dim)
     else:
         raise ValueError("Unknown model name")
     
@@ -55,7 +67,7 @@ def train_and_evaluate(model, train_loader, test_loader, epochs, model_save_path
         for _, data in enumerate(train_loader()):
             steps += 1
             x_data, y_data = data[0], data[1]
-            predicts, acc = model(x_data, y_data)
+            predicts, acc = model(x_data, y_data.reshape((-1,1)))
             loss = cross_entropy(predicts, y_data)
             loss.backward()
             optimizer.step()
@@ -72,7 +84,7 @@ def train_and_evaluate(model, train_loader, test_loader, epochs, model_save_path
                 for _, data in enumerate(test_loader()):
                     x_data, y_data = data[0], data[1]
                     predicts = model(x_data)
-                    acc = paddle.metric.accuracy(predicts, y_data)
+                    acc = paddle.metric.accuracy(predicts, y_data.reshape((-1,1)))
                     accs.append(acc.numpy())
                 test_iters.append(steps)
                 test_acc.append(np.mean(accs))
@@ -82,7 +94,7 @@ def train_and_evaluate(model, train_loader, test_loader, epochs, model_save_path
             if steps % 100 == 0:
                 save_path = os.path.join(model_save_path, f"save_dir_{steps}.pdparams")
                 print(f'save model to: {save_path}')
-                paddle.save(model.state_dict(), save_path)
+      #          paddle.save(model.state_dict(), save_path)
 
     
     model.eval()
@@ -99,15 +111,6 @@ def train_and_evaluate(model, train_loader, test_loader, epochs, model_save_path
     paddle.save(model.state_dict(), os.path.join(model_save_path, "save_dir_final.pdparams"))
     return Iters, train_loss, total_acc, test_iters, test_acc
 
-# 可视化
-def draw_process(title, color, iters, data, label):
-    plt.title(title, fontsize=24)
-    plt.xlabel("iter", fontsize=20)
-    plt.ylabel(label, fontsize=20)
-    plt.plot(iters, data, color=color, label=label)
-    plt.legend()
-    plt.grid()
-    plt.show()
 
 def save_log(model_name,batch_size,dir_save_path ,Iters, train_loss, test_iters, test_acc):
     log_dit = {
@@ -122,10 +125,27 @@ def save_log(model_name,batch_size,dir_save_path ,Iters, train_loss, test_iters,
         pickle.dump(log_dit, f)
 
 
+
+
 if __name__ == '__main__':
-    train_loader, test_loader = get_data_loaders(train_path, train_label_path, test_path, test_label_path, train_transform, test_transform, BATCH_SIZE)
-    model = initialize_model(MODEL, CLASS_DIM)
-    Iters, train_loss, total_acc, test_iters, test_acc = train_and_evaluate(model, train_loader, test_loader, EPOCH, modle_save_path)
-    # 保存训练过程
-    save_log(MODEL,BATCH_SIZE,modle_save_path,Iters, train_loss, test_iters, test_acc)
+    # train_loader, test_loader = get_data_loaders(DATASET_CHOICE,train_path, train_label_path, test_path, test_label_path, train_transform, test_transform, BATCH_SIZE)
+    # model =  initialize_model(MODEL, CLASS_DIM)
+    # Iters, train_loss, total_acc, test_iters, test_acc = train_and_evaluate(model, train_loader, test_loader, EPOCH, modle_save_path)
+    # # 保存训练过程
+    # save_log(MODEL,BATCH_SIZE,modle_save_path,Iters, train_loss, test_iters, test_acc)
+    # ['VGGNet','VisionTransformer','AlexNet','ResNet']
+    model_names = ['VGGNet','VisionTransformer','AlexNet','ResNet152','ResNet101','ResNet50','ResNet']
+    base_path = r"D:\VsCodeProjects\pythonProjects\Smart_Algorithm\model_params"
+
+    for model_name in model_names:
+        MODEL=model_name
+        model_save_path = os.path.join(base_path, model_name)
+        print(model_save_path)
+        train_loader, test_loader = get_data_loaders(DATASET_CHOICE,train_path, train_label_path, test_path, test_label_path, train_transform, test_transform, BATCH_SIZE)
+        model = initialize_model(MODEL, CLASS_DIM)
+        Iters, train_loss, total_acc, test_iters, test_acc = train_and_evaluate(model, train_loader, test_loader, EPOCH, modle_save_path)
+        # 保存训练过程
+        save_log(MODEL,BATCH_SIZE,modle_save_path,Iters, train_loss, test_iters, test_acc)
+
+
 
